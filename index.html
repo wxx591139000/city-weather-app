@@ -232,12 +232,34 @@
       font-size: 13px;
       font-weight: 700;
       color: #1e3a8a;
+      margin-bottom: 4px;
+    }
+    .hourly-hint {
+      font-size: 11px;
+      color: #64748b;
       margin-bottom: 8px;
     }
     .hourly-list {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      display: flex;
       gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 6px;
+      scroll-snap-type: x proximity;
+      scrollbar-width: thin;
+      scrollbar-color: #93c5fd transparent;
+      -webkit-overflow-scrolling: touch;
+    }
+    .hourly-item {
+      min-width: 72px;
+      flex: 0 0 auto;
+      text-align: center;
+      background: #f8fbff;
+      border: 1px solid #e3efff;
+      border-radius: 10px;
+      padding: 8px 4px;
+      font-size: 12px;
+      color: #475569;
+      scroll-snap-align: start;
     }
     .trend-section {
       margin-top: 14px;
@@ -245,18 +267,23 @@
       z-index: 1;
     }
     .trend-bars {
-      display: grid;
-      grid-template-columns: repeat(8, minmax(0, 1fr));
+      display: flex;
       gap: 6px;
       align-items: end;
       min-height: 92px;
       padding: 8px 2px 0;
+      overflow-x: auto;
+      scrollbar-width: thin;
+      scrollbar-color: #93c5fd transparent;
+      -webkit-overflow-scrolling: touch;
     }
     .trend-bar-item {
       display: flex;
       flex-direction: column;
       align-items: center;
       gap: 6px;
+      min-width: 34px;
+      flex: 0 0 auto;
     }
     .trend-bar {
       width: 100%;
@@ -274,15 +301,6 @@
       color: #64748b;
       font-size: 11px;
     }
-    .hourly-item {
-      text-align: center;
-      background: #f8fbff;
-      border: 1px solid #e3efff;
-      border-radius: 10px;
-      padding: 8px 4px;
-      font-size: 12px;
-      color: #475569;
-    }
     .loading, .error {
       text-align: center;
       padding: 28px 0;
@@ -295,8 +313,8 @@
       .controls { grid-template-columns: 1fr; }
       .grid { grid-template-columns: 1fr; }
       .forecast { grid-template-columns: 1fr; }
-      .hourly-list { grid-template-columns: repeat(2, 1fr); }
-      .trend-bars { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+      .hourly-list { display: flex; }
+      .trend-bars { display: flex; }
       .app { padding: 20px; }
     }
   </style>
@@ -446,7 +464,7 @@
       const current = data.current;
       const hourly = data.hourly;
       const weather = getWeatherInfo(current.weather_code);
-      const temps = hourly.temperature_2m.slice(0, 8);
+      const temps = hourly.temperature_2m.slice(0, 24);
       const maxTemp = Math.max(...temps);
       const minTemp = Math.min(...temps);
       const range = Math.max(1, maxTemp - minTemp);
@@ -468,7 +486,7 @@
           low: Math.round(hourly.temperature_2m[index]),
           weather: getWeatherInfo(hourly.weather_code[index])
         })),
-        hourly: hourly.time.slice(0, 8).map((time, index) => ({
+        hourly: hourly.time.slice(0, 24).map((time, index) => ({
           time: `${new Date(time).getHours()}点`,
           temp: Math.round(hourly.temperature_2m[index]),
           weather: getWeatherInfo(hourly.weather_code[index]),
@@ -520,7 +538,8 @@
             `).join("")}
           </div>
           <div class="hourly-section">
-            <div class="hourly-title">未来 8 小时</div>
+            <div class="hourly-title">未来 24 小时</div>
+            <div class="hourly-hint">左右滑动查看每小时天气</div>
             <div class="hourly-list">
               ${item.hourly.map(hour => `
                 <div class="hourly-item">
