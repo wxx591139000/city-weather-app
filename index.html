@@ -417,15 +417,26 @@
     function formatHourLabel(date, referenceDate) {
       const diffHours = Math.round((date.getTime() - referenceDate.getTime()) / (1000 * 60 * 60));
       if (diffHours <= 0) return "现在";
-      if (diffHours === 1) return "1小时后";
-      if (diffHours < 24) return `${diffHours}小时后`;
+
+      const referenceDay = new Date(referenceDate);
+      referenceDay.setHours(0, 0, 0, 0);
+      const targetDay = new Date(date);
+      targetDay.setHours(0, 0, 0, 0);
+      const dayDiff = Math.round((targetDay.getTime() - referenceDay.getTime()) / (1000 * 60 * 60 * 24));
 
       const hour = date.getHours();
-      const hourText = `${String(hour).padStart(2, "0")}:00`;
-      const dayDiff = Math.floor(diffHours / 24);
-      if (dayDiff === 1) return `明天 ${hourText}`;
-      if (dayDiff === 2) return `后天 ${hourText}`;
-      return `${date.getMonth() + 1}/${date.getDate()} ${hourText}`;
+      let periodText = "";
+      if (hour === 0) periodText = "凌晨 00:00";
+      else if (hour < 6) periodText = `凌晨 ${String(hour).padStart(2, "0")}:00`;
+      else if (hour < 12) periodText = `上午 ${String(hour).padStart(2, "0")}:00`;
+      else if (hour === 12) periodText = "中午 12:00";
+      else if (hour < 18) periodText = `下午 ${String(hour).padStart(2, "0")}:00`;
+      else periodText = `晚上 ${String(hour).padStart(2, "0")}:00`;
+
+      if (dayDiff === 0) return `今天 ${periodText}`;
+      if (dayDiff === 1) return `明天 ${periodText}`;
+      if (dayDiff === 2) return `后天 ${periodText}`;
+      return `${date.getMonth() + 1}/${date.getDate()} ${periodText}`;
     }
 
     function getComfortLabel(temp, humidity) {
