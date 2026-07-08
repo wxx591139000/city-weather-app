@@ -85,9 +85,13 @@
       font-size: 15px;
       outline: none;
       background: #fbfdff;
+      color: #0f172a;
       transition: all 0.2s ease;
-      appearance: none;
-      -webkit-appearance: none;
+      width: 100%;
+      min-height: 46px;
+      display: block;
+      appearance: auto;
+      -webkit-appearance: menulist;
     }
     .field input:focus,
     .field select:focus {
@@ -224,7 +228,7 @@
     <form id="weatherForm" class="controls">
       <div class="field">
         <label for="city1">城市 1</label>
-        <select id="city1" name="city1">
+        <select id="city1" name="city1" aria-label="城市 1">
           <option value="北京">北京</option>
           <option value="天津">天津</option>
           <option value="上海">上海</option>
@@ -244,7 +248,7 @@
       </div>
       <div class="field">
         <label for="city2">城市 2</label>
-        <select id="city2" name="city2">
+        <select id="city2" name="city2" aria-label="城市 2">
           <option value="天津">天津</option>
           <option value="北京">北京</option>
           <option value="上海">上海</option>
