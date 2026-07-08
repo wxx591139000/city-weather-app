@@ -186,7 +186,7 @@
     .detail-list { display: grid; gap: 8px; color: #475569; font-size: 15px; position: relative; z-index: 1; }
     .forecast {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(4, 1fr);
       gap: 8px;
       margin-top: 14px;
       position: relative;
@@ -201,6 +201,31 @@
       font-size: 13px;
       color: #334155;
       font-weight: 600;
+    }
+    .hourly-section {
+      margin-top: 14px;
+      position: relative;
+      z-index: 1;
+    }
+    .hourly-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #1e3a8a;
+      margin-bottom: 8px;
+    }
+    .hourly-list {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+    .hourly-item {
+      text-align: center;
+      background: #f8fbff;
+      border: 1px solid #e3efff;
+      border-radius: 10px;
+      padding: 8px 4px;
+      font-size: 12px;
+      color: #475569;
     }
     .loading, .error {
       text-align: center;
@@ -348,12 +373,12 @@
       const location = await resolveLocation(city);
       if (!location) throw new Error(`找不到城市：${city}`);
 
-      const forecastRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${location.latitude}&longitude=${location.longitude}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=Asia%2FShanghai`);
+      const forecastRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${location.latitude}&longitude=${location.longitude}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&hourly=temperature_2m,weather_code&forecast_days=1&timezone=Asia%2FShanghai`);
       if (!forecastRes.ok) throw new Error("天气数据获取失败，请稍后再试");
 
       const data = await forecastRes.json();
       const current = data.current;
-      const daily = data.daily;
+      const hourly = data.hourly;
       const weather = getWeatherInfo(current.weather_code);
 
       return {
@@ -365,12 +390,17 @@
         humidity: current.relative_humidity_2m,
         wind: Math.round(current.wind_speed_10m),
         updated: formatTime(new Date()),
-        forecast: daily.time.slice(0, 3).map((day, index) => ({
-          day: index === 0 ? "今天" : index === 1 ? "明天" : "后天",
-          date: formatDate(day),
-          high: Math.round(daily.temperature_2m_max[index]),
-          low: Math.round(daily.temperature_2m_min[index]),
-          weather: getWeatherInfo(daily.weather_code[index])
+        forecast: hourly.time.slice(0, 4).map((time, index) => ({
+          day: index === 0 ? "当前" : `+${index}h`,
+          date: new Date(time).getHours() + "点",
+          high: Math.round(hourly.temperature_2m[index]),
+          low: Math.round(hourly.temperature_2m[index]),
+          weather: getWeatherInfo(hourly.weather_code[index])
+        })),
+        hourly: hourly.time.slice(0, 8).map((time, index) => ({
+          time: `${new Date(time).getHours()}点`,
+          temp: Math.round(hourly.temperature_2m[index]),
+          weather: getWeatherInfo(hourly.weather_code[index])
         }))
       };
     }
@@ -408,9 +438,21 @@
                 <div>${day.day}</div>
                 <div>${day.date}</div>
                 <div>${day.weather.icon}</div>
-                <div>${day.high}° / ${day.low}°</div>
+                <div>${day.high}°</div>
               </div>
             `).join("")}
+          </div>
+          <div class="hourly-section">
+            <div class="hourly-title">未来 8 小时</div>
+            <div class="hourly-list">
+              ${item.hourly.map(hour => `
+                <div class="hourly-item">
+                  <div>${hour.time}</div>
+                  <div>${hour.weather.icon}</div>
+                  <div>${hour.temp}°</div>
+                </div>
+              `).join("")}
+            </div>
           </div>
         </div>
       `;
