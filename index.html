@@ -8,8 +8,10 @@
     * { box-sizing: border-box; }
     body {
       margin: 0;
-      font-family: "Microsoft YaHei", Arial, sans-serif;
-      background: linear-gradient(135deg, #e0f2fe 0%, #dbeafe 100%);
+      font-family: Inter, "Segoe UI", "Microsoft YaHei", Arial, sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(96, 165, 250, 0.25), transparent 28%),
+        linear-gradient(135deg, #f8fbff 0%, #eef6ff 45%, #e8f0ff 100%);
       color: #0f172a;
       min-height: 100vh;
       padding: 24px;
@@ -18,30 +20,35 @@
       justify-content: center;
     }
     .app {
-      width: min(100%, 1000px);
-      background: rgba(255,255,255,0.96);
-      border-radius: 24px;
-      box-shadow: 0 20px 50px rgba(37, 99, 235, 0.18);
-      padding: 28px;
+      width: min(100%, 1060px);
+      background: rgba(255,255,255,0.9);
+      backdrop-filter: blur(14px);
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      border-radius: 28px;
+      box-shadow: 0 30px 70px rgba(15, 23, 42, 0.12);
+      padding: 32px;
     }
     .header {
       text-align: center;
-      margin-bottom: 20px;
+      margin-bottom: 22px;
     }
     h1 {
       margin: 0 0 8px;
-      font-size: 29px;
-      color: #1d4ed8;
+      font-size: 32px;
+      font-weight: 800;
+      color: #0f3d91;
+      letter-spacing: -0.02em;
     }
     .subtitle {
       margin: 0;
       color: #64748b;
+      font-size: 15px;
     }
     .controls {
       display: grid;
       grid-template-columns: 1fr 1fr auto;
       gap: 12px;
-      margin-bottom: 20px;
+      margin-bottom: 12px;
       align-items: end;
     }
     .field {
@@ -50,32 +57,40 @@
       gap: 6px;
     }
     .field label {
-      font-size: 14px;
+      font-size: 13px;
       color: #334155;
-      font-weight: 600;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
     }
     .field input {
-      border: 1px solid #bfdbfe;
-      border-radius: 12px;
-      padding: 10px 12px;
+      border: 1px solid #d7e6ff;
+      border-radius: 14px;
+      padding: 12px 14px;
       font-size: 15px;
       outline: none;
+      background: #fbfdff;
+      transition: all 0.2s ease;
     }
     .field input:focus {
       border-color: #3b82f6;
-      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.16);
+      box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
+      background: white;
     }
     .btn {
       border: none;
-      border-radius: 12px;
-      padding: 10px 16px;
-      background: linear-gradient(90deg, #2563eb, #3b82f6);
+      border-radius: 14px;
+      padding: 12px 18px;
+      background: linear-gradient(90deg, #2563eb, #3b82f6 60%, #60a5fa);
       color: white;
       font-weight: 700;
       cursor: pointer;
+      box-shadow: 0 10px 24px rgba(37, 99, 235, 0.25);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
     .btn:hover {
-      transform: translateY(-1px);
+      transform: translateY(-2px);
+      box-shadow: 0 14px 30px rgba(37, 99, 235, 0.28);
     }
     .hint {
       text-align: center;
@@ -89,21 +104,34 @@
       gap: 20px;
     }
     .city-card {
-      background: linear-gradient(145deg, #f8fbff, #eef6ff);
-      border: 1px solid #bfdbfe;
-      border-radius: 18px;
-      padding: 20px;
-      min-height: 280px;
+      background: linear-gradient(145deg, #ffffff, #f4f9ff);
+      border: 1px solid rgba(191, 219, 254, 0.85);
+      border-radius: 22px;
+      padding: 22px;
+      min-height: 290px;
+      box-shadow: 0 16px 36px rgba(15, 23, 42, 0.06);
+      position: relative;
+      overflow: hidden;
+    }
+    .city-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(120deg, rgba(59, 130, 246, 0.08), transparent 45%);
+      pointer-events: none;
     }
     .city-top {
       display: flex;
       justify-content: space-between;
       align-items: center;
       margin-bottom: 8px;
+      position: relative;
+      z-index: 1;
     }
     .city-name {
       font-size: 22px;
-      font-weight: 700;
+      font-weight: 800;
+      color: #112b58;
     }
     .updated {
       font-size: 12px;
@@ -113,6 +141,8 @@
       color: #64748b;
       font-size: 14px;
       margin-bottom: 16px;
+      position: relative;
+      z-index: 1;
     }
     .weather-main {
       display: flex;
@@ -120,20 +150,25 @@
       justify-content: space-between;
       gap: 12px;
       margin-bottom: 16px;
+      position: relative;
+      z-index: 1;
     }
-    .weather-icon { font-size: 54px; }
-    .temp { font-size: 42px; font-weight: 700; color: #1e3a8a; }
-    .desc { font-size: 16px; color: #334155; margin-bottom: 12px; }
-    .detail-list { display: grid; gap: 8px; color: #475569; font-size: 15px; }
+    .weather-icon { font-size: 58px; }
+    .temp { font-size: 44px; font-weight: 800; color: #1e3a8a; }
+    .desc { font-size: 16px; color: #334155; margin-bottom: 12px; position: relative; z-index: 1; }
+    .detail-list { display: grid; gap: 8px; color: #475569; font-size: 15px; position: relative; z-index: 1; }
     .forecast {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 8px;
       margin-top: 14px;
+      position: relative;
+      z-index: 1;
     }
     .forecast-item {
       text-align: center;
-      background: white;
+      background: linear-gradient(180deg, #fbfdff, #f3f8ff);
+      border: 1px solid #e3efff;
       border-radius: 12px;
       padding: 8px 6px;
       font-size: 13px;
@@ -141,15 +176,17 @@
     }
     .loading, .error {
       text-align: center;
-      padding: 24px 0;
+      padding: 28px 0;
       color: #64748b;
       grid-column: 1 / -1;
+      font-size: 16px;
     }
     .error { color: #dc2626; }
     @media (max-width: 760px) {
       .controls { grid-template-columns: 1fr; }
       .grid { grid-template-columns: 1fr; }
       .forecast { grid-template-columns: 1fr; }
+      .app { padding: 20px; }
     }
   </style>
 </head>
