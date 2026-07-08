@@ -59,11 +59,11 @@
       gap: 12px;
       margin-bottom: 12px;
       align-items: end;
-      background: rgba(248, 251, 255, 0.92);
-      border: 1px solid rgba(191, 219, 254, 0.65);
-      border-radius: 20px;
+      background: linear-gradient(135deg, rgba(248, 251, 255, 0.96), rgba(238, 245, 255, 0.92));
+      border: 1px solid rgba(191, 219, 254, 0.7);
+      border-radius: 22px;
       padding: 16px;
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.8);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.8), 0 8px 24px rgba(15, 23, 42, 0.04);
     }
     .field {
       display: flex;
@@ -184,6 +184,27 @@
     .temp { font-size: 44px; font-weight: 800; color: #1e3a8a; }
     .desc { font-size: 16px; color: #334155; margin-bottom: 12px; position: relative; z-index: 1; }
     .detail-list { display: grid; gap: 8px; color: #475569; font-size: 15px; position: relative; z-index: 1; }
+    .metric-strip {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 10px 0 8px;
+      position: relative;
+      z-index: 1;
+    }
+    .metric-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 7px 10px;
+      border-radius: 999px;
+      border: 1px solid #dbeafe;
+      background: linear-gradient(135deg, #f8fbff, #eef6ff);
+      color: #1e3a8a;
+      font-size: 12px;
+      font-weight: 700;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.7);
+    }
     .forecast {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
@@ -218,6 +239,41 @@
       grid-template-columns: repeat(4, 1fr);
       gap: 8px;
     }
+    .trend-section {
+      margin-top: 14px;
+      position: relative;
+      z-index: 1;
+    }
+    .trend-bars {
+      display: grid;
+      grid-template-columns: repeat(8, minmax(0, 1fr));
+      gap: 6px;
+      align-items: end;
+      min-height: 92px;
+      padding: 8px 2px 0;
+    }
+    .trend-bar-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+    .trend-bar {
+      width: 100%;
+      min-height: 18px;
+      border-radius: 999px 999px 8px 8px;
+      background: linear-gradient(180deg, #8ec5ff 0%, #2563eb 100%);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.35);
+    }
+    .trend-label {
+      color: #1e3a8a;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .trend-time {
+      color: #64748b;
+      font-size: 11px;
+    }
     .hourly-item {
       text-align: center;
       background: #f8fbff;
@@ -239,6 +295,8 @@
       .controls { grid-template-columns: 1fr; }
       .grid { grid-template-columns: 1fr; }
       .forecast { grid-template-columns: 1fr; }
+      .hourly-list { grid-template-columns: repeat(2, 1fr); }
+      .trend-bars { grid-template-columns: repeat(4, minmax(0, 1fr)); }
       .app { padding: 20px; }
     }
   </style>
@@ -338,6 +396,14 @@
       return `${date.getHours()}:${String(date.getMinutes()).padStart(2, "0")}`;
     }
 
+    function getComfortLabel(temp, humidity) {
+      if (temp >= 30 || humidity > 80) return "闷热";
+      if (temp <= 8) return "偏冷";
+      if (temp >= 25 && humidity > 70) return "潮湿";
+      if (temp >= 22 && humidity < 45) return "干燥";
+      return "舒适";
+    }
+
     function renderLoading() {
       weatherGrid.innerHTML = '<div class="loading">正在加载天气数据...</div>';
     }
@@ -380,6 +446,10 @@
       const current = data.current;
       const hourly = data.hourly;
       const weather = getWeatherInfo(current.weather_code);
+      const temps = hourly.temperature_2m.slice(0, 8);
+      const maxTemp = Math.max(...temps);
+      const minTemp = Math.min(...temps);
+      const range = Math.max(1, maxTemp - minTemp);
 
       return {
         city: location.name,
@@ -389,6 +459,7 @@
         icon: weather.icon,
         humidity: current.relative_humidity_2m,
         wind: Math.round(current.wind_speed_10m),
+        comfort: getComfortLabel(Math.round(current.temperature_2m), current.relative_humidity_2m),
         updated: formatTime(new Date()),
         forecast: hourly.time.slice(0, 4).map((time, index) => ({
           day: index === 0 ? "当前" : `+${index}h`,
@@ -400,7 +471,8 @@
         hourly: hourly.time.slice(0, 8).map((time, index) => ({
           time: `${new Date(time).getHours()}点`,
           temp: Math.round(hourly.temperature_2m[index]),
-          weather: getWeatherInfo(hourly.weather_code[index])
+          weather: getWeatherInfo(hourly.weather_code[index]),
+          barHeight: Math.max(18, Math.round(((hourly.temperature_2m[index] - minTemp) / range) * 70 + 14))
         }))
       };
     }
@@ -428,6 +500,11 @@
             <div class="temp">${item.temp}°</div>
           </div>
           <div class="desc">${item.desc}</div>
+          <div class="metric-strip">
+            <div class="metric-pill">🌡️ 现在 ${item.temp}°</div>
+            <div class="metric-pill">🧭 ${item.comfort}</div>
+            <div class="metric-pill">💨 ${item.wind} km/h</div>
+          </div>
           <div class="detail-list">
             <div>💧 湿度：${item.humidity}%</div>
             <div>🌬️ 风速：${item.wind} km/h</div>
@@ -450,6 +527,18 @@
                   <div>${hour.time}</div>
                   <div>${hour.weather.icon}</div>
                   <div>${hour.temp}°</div>
+                </div>
+              `).join("")}
+            </div>
+          </div>
+          <div class="trend-section">
+            <div class="hourly-title">小时变化</div>
+            <div class="trend-bars">
+              ${item.hourly.map(hour => `
+                <div class="trend-bar-item">
+                  <div class="trend-bar" style="height:${hour.barHeight}%"></div>
+                  <div class="trend-label">${hour.temp}°</div>
+                  <div class="trend-time">${hour.time}</div>
                 </div>
               `).join("")}
             </div>
