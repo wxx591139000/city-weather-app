@@ -439,6 +439,17 @@
       return `${date.getMonth() + 1}/${date.getDate()} ${periodText}`;
     }
 
+    function getRelativeSummaryLabel(referenceDate, targetDate) {
+      const diffHours = Math.round((targetDate.getTime() - referenceDate.getTime()) / (1000 * 60 * 60));
+      if (diffHours <= 0) return "现在";
+      if (diffHours === 1) return "1小时后";
+      if (diffHours < 24) return `${diffHours}小时后`;
+      const dayDiff = Math.floor(diffHours / 24);
+      if (dayDiff === 1) return "明天";
+      if (dayDiff === 2) return "后天";
+      return `${dayDiff}天后`;
+    }
+
     function getComfortLabel(temp, humidity) {
       if (temp >= 30 || humidity > 80) return "闷热";
       if (temp <= 8) return "偏冷";
@@ -526,6 +537,7 @@
         hourly: futureHourly.map((entry) => {
           const time = new Date(entry.time);
           return {
+            rawTime: entry.time,
             time: formatHourLabel(time, now),
             temp: Math.round(entry.temp),
             weather: getWeatherInfo(entry.code),
@@ -578,8 +590,8 @@
             `).join("")}
           </div>
           <div class="hourly-section">
-            <div class="hourly-title">未来 24 小时</div>
-            <div class="hourly-hint">左右滑动查看每小时天气</div>
+            <div class="hourly-title">${getRelativeSummaryLabel(new Date(), item.hourly[0] ? new Date(item.hourly[0].rawTime) : new Date())} 24 小时</div>
+            <div class="hourly-hint">左右滑动查看接下来每小时天气</div>
             <div class="hourly-list">
               ${item.hourly.map(hour => `
                 <div class="hourly-item">
@@ -591,7 +603,7 @@
             </div>
           </div>
           <div class="trend-section">
-            <div class="hourly-title">小时变化</div>
+            <div class="hourly-title">接下来小时变化</div>
             <div class="trend-bars">
               ${item.hourly.map(hour => `
                 <div class="trend-bar-item">
