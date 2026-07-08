@@ -77,7 +77,8 @@
       letter-spacing: 0.04em;
       text-transform: uppercase;
     }
-    .field input {
+    .field input,
+    .field select {
       border: 1px solid #d7e6ff;
       border-radius: 14px;
       padding: 12px 14px;
@@ -85,8 +86,11 @@
       outline: none;
       background: #fbfdff;
       transition: all 0.2s ease;
+      appearance: none;
+      -webkit-appearance: none;
     }
-    .field input:focus {
+    .field input:focus,
+    .field select:focus {
       border-color: #3b82f6;
       box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
       background: white;
@@ -220,16 +224,48 @@
     <form id="weatherForm" class="controls">
       <div class="field">
         <label for="city1">城市 1</label>
-        <input id="city1" name="city1" type="text" value="北京" placeholder="请输入城市" />
+        <select id="city1" name="city1">
+          <option value="北京">北京</option>
+          <option value="天津">天津</option>
+          <option value="上海">上海</option>
+          <option value="广州">广州</option>
+          <option value="深圳">深圳</option>
+          <option value="杭州">杭州</option>
+          <option value="成都">成都</option>
+          <option value="重庆">重庆</option>
+          <option value="西安">西安</option>
+          <option value="南京">南京</option>
+          <option value="苏州">苏州</option>
+          <option value="武汉">武汉</option>
+          <option value="郑州">郑州</option>
+          <option value="青岛">青岛</option>
+          <option value="泰州">泰州</option>
+        </select>
       </div>
       <div class="field">
         <label for="city2">城市 2</label>
-        <input id="city2" name="city2" type="text" value="天津" placeholder="请输入城市" />
+        <select id="city2" name="city2">
+          <option value="天津">天津</option>
+          <option value="北京">北京</option>
+          <option value="上海">上海</option>
+          <option value="广州">广州</option>
+          <option value="深圳">深圳</option>
+          <option value="杭州">杭州</option>
+          <option value="成都">成都</option>
+          <option value="重庆">重庆</option>
+          <option value="西安">西安</option>
+          <option value="南京">南京</option>
+          <option value="苏州">苏州</option>
+          <option value="武汉">武汉</option>
+          <option value="郑州">郑州</option>
+          <option value="青岛">青岛</option>
+          <option value="泰州">泰州</option>
+        </select>
       </div>
       <button class="btn" type="submit">更新天气</button>
     </form>
 
-    <div class="hint">支持输入任意城市名称，例如上海、广州、深圳</div>
+    <div class="hint">从下拉列表中选择你想查看的两个城市</div>
     <div id="weatherGrid" class="grid"></div>
   </div>
 
