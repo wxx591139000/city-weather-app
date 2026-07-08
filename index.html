@@ -281,12 +281,31 @@
       weatherGrid.innerHTML = `<div class="error">${message}</div>`;
     }
 
-    async function loadWeather(city) {
-      const geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=zh&format=json`);
-      if (!geoRes.ok) throw new Error("城市定位失败，请检查城市名称");
+    async function resolveLocation(city) {
+      const queries = [
+        city,
+        `${city}市`,
+        `${city}县`,
+        `${city}, 中国`,
+        `${city}市, 中国`
+      ];
 
-      const geoData = await geoRes.json();
-      const location = geoData.results?.[0];
+      for (const query of queries) {
+        const geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=5&language=zh&format=json`);
+        if (!geoRes.ok) continue;
+
+        const geoData = await geoRes.json();
+        const location = geoData.results?.find((item) => item.country === "中国") || geoData.results?.[0];
+        if (location) {
+          return location;
+        }
+      }
+
+      return null;
+    }
+
+    async function loadWeather(city) {
+      const location = await resolveLocation(city);
       if (!location) throw new Error(`找不到城市：${city}`);
 
       const forecastRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${location.latitude}&longitude=${location.longitude}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=Asia%2FShanghai`);
