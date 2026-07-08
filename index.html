@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>城市天气预报</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Microsoft YaHei", Arial, sans-serif;
+      background: linear-gradient(135deg, #e0f2fe 0%, #dbeafe 100%);
+      color: #0f172a;
+      min-height: 100vh;
+      padding: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .app {
+      width: min(100%, 1000px);
+      background: rgba(255,255,255,0.96);
+      border-radius: 24px;
+      box-shadow: 0 20px 50px rgba(37, 99, 235, 0.18);
+      padding: 28px;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: 29px;
+      color: #1d4ed8;
+    }
+    .subtitle {
+      margin: 0;
+      color: #64748b;
+    }
+    .controls {
+      display: grid;
+      grid-template-columns: 1fr 1fr auto;
+      gap: 12px;
+      margin-bottom: 20px;
+      align-items: end;
+    }
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .field label {
+      font-size: 14px;
+      color: #334155;
+      font-weight: 600;
+    }
+    .field input {
+      border: 1px solid #bfdbfe;
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-size: 15px;
+      outline: none;
+    }
+    .field input:focus {
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.16);
+    }
+    .btn {
+      border: none;
+      border-radius: 12px;
+      padding: 10px 16px;
+      background: linear-gradient(90deg, #2563eb, #3b82f6);
+      color: white;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .btn:hover {
+      transform: translateY(-1px);
+    }
+    .hint {
+      text-align: center;
+      color: #64748b;
+      font-size: 14px;
+      margin-bottom: 18px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 20px;
+    }
+    .city-card {
+      background: linear-gradient(145deg, #f8fbff, #eef6ff);
+      border: 1px solid #bfdbfe;
+      border-radius: 18px;
+      padding: 20px;
+      min-height: 280px;
+    }
+    .city-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .city-name {
+      font-size: 22px;
+      font-weight: 700;
+    }
+    .updated {
+      font-size: 12px;
+      color: #64748b;
+    }
+    .city-meta {
+      color: #64748b;
+      font-size: 14px;
+      margin-bottom: 16px;
+    }
+    .weather-main {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .weather-icon { font-size: 54px; }
+    .temp { font-size: 42px; font-weight: 700; color: #1e3a8a; }
+    .desc { font-size: 16px; color: #334155; margin-bottom: 12px; }
+    .detail-list { display: grid; gap: 8px; color: #475569; font-size: 15px; }
+    .forecast {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-top: 14px;
+    }
+    .forecast-item {
+      text-align: center;
+      background: white;
+      border-radius: 12px;
+      padding: 8px 6px;
+      font-size: 13px;
+      color: #334155;
+    }
+    .loading, .error {
+      text-align: center;
+      padding: 24px 0;
+      color: #64748b;
+      grid-column: 1 / -1;
+    }
+    .error { color: #dc2626; }
+    @media (max-width: 760px) {
+      .controls { grid-template-columns: 1fr; }
+      .grid { grid-template-columns: 1fr; }
+      .forecast { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="header">
+      <h1>城市天气预报</h1>
+      <p class="subtitle">查看两个城市的实时天气与未来几天天气</p>
+    </div>
+
+    <form id="weatherForm" class="controls">
+      <div class="field">
+        <label for="city1">城市 1</label>
+        <input id="city1" name="city1" type="text" value="北京" placeholder="请输入城市" />
+      </div>
+      <div class="field">
+        <label for="city2">城市 2</label>
+        <input id="city2" name="city2" type="text" value="天津" placeholder="请输入城市" />
+      </div>
+      <button class="btn" type="submit">更新天气</button>
+    </form>
+
+    <div class="hint">支持输入任意城市名称，例如上海、广州、深圳</div>
+    <div id="weatherGrid" class="grid"></div>
+  </div>
+
+  <script>
+    const weatherGrid = document.getElementById("weatherGrid");
+    const weatherForm = document.getElementById("weatherForm");
+    const city1Input = document.getElementById("city1");
+    const city2Input = document.getElementById("city2");
+
+    const weatherCodeMap = {
+      0: { text: "晴天", icon: "☀️" },
+      1: { text: "大部晴", icon: "🌤️" },
+      2: { text: "局部多云", icon: "⛅" },
+      3: { text: "阴天", icon: "☁️" },
+      45: { text: "雾", icon: "🌫️" },
+      48: { text: "冻雾", icon: "🌫️" },
+      51: { text: "小毛毛雨", icon: "🌦️" },
+      53: { text: "中毛毛雨", icon: "🌦️" },
+      55: { text: "强毛毛雨", icon: "🌦️" },
+      61: { text: "小雨", icon: "🌧️" },
+      63: { text: "中雨", icon: "🌧️" },
+      65: { text: "大雨", icon: "🌧️" },
+      71: { text: "小雪", icon: "🌨️" },
+      73: { text: "中雪", icon: "❄️" },
+      75: { text: "大雪", icon: "❄️" },
+      95: { text: "雷暴", icon: "⛈️" },
+      96: { text: "雷暴伴冰雹", icon: "⛈️" },
+      99: { text: "强雷暴", icon: "⛈️" }
+    };
+
+    function getWeatherInfo(code) {
+      return weatherCodeMap[code] || { text: "未知", icon: "🌈" };
+    }
+
+    function formatDate(dateStr) {
+      const date = new Date(dateStr);
+      return `${date.getMonth() + 1}/${date.getDate()}`;
+    }
+
+    function formatTime(date) {
+      return `${date.getHours()}:${String(date.getMinutes()).padStart(2, "0")}`;
+    }
+
+    function renderLoading() {
+      weatherGrid.innerHTML = '<div class="loading">正在加载天气数据...</div>';
+    }
+
+    function renderError(message) {
+      weatherGrid.innerHTML = `<div class="error">${message}</div>`;
+    }
+
+    async function loadWeather(city) {
+      const geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=zh&format=json`);
+      if (!geoRes.ok) throw new Error("城市定位失败，请检查城市名称");
+
+      const geoData = await geoRes.json();
+      const location = geoData.results?.[0];
+      if (!location) throw new Error(`找不到城市：${city}`);
+
+      const forecastRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${location.latitude}&longitude=${location.longitude}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=Asia%2FShanghai`);
+      if (!forecastRes.ok) throw new Error("天气数据获取失败，请稍后再试");
+
+      const data = await forecastRes.json();
+      const current = data.current;
+      const daily = data.daily;
+      const weather = getWeatherInfo(current.weather_code);
+
+      return {
+        city: location.name,
+        country: location.country,
+        temp: Math.round(current.temperature_2m),
+        desc: weather.text,
+        icon: weather.icon,
+        humidity: current.relative_humidity_2m,
+        wind: Math.round(current.wind_speed_10m),
+        updated: formatTime(new Date()),
+        forecast: daily.time.slice(0, 3).map((day, index) => ({
+          day: index === 0 ? "今天" : index === 1 ? "明天" : "后天",
+          date: formatDate(day),
+          high: Math.round(daily.temperature_2m_max[index]),
+          low: Math.round(daily.temperature_2m_min[index]),
+          weather: getWeatherInfo(daily.weather_code[index])
+        }))
+      };
+    }
+
+    async function renderWeather(cities) {
+      renderLoading();
+      try {
+        const results = await Promise.all(cities.map(loadWeather));
+        weatherGrid.innerHTML = results.map(renderCityCard).join("");
+      } catch (error) {
+        renderError(error.message || "加载失败");
+      }
+    }
+
+    function renderCityCard(item) {
+      return `
+        <div class="city-card">
+          <div class="city-top">
+            <div class="city-name">${item.city}</div>
+            <div class="updated">更新 ${item.updated}</div>
+          </div>
+          <div class="city-meta">${item.country}</div>
+          <div class="weather-main">
+            <div class="weather-icon">${item.icon}</div>
+            <div class="temp">${item.temp}°</div>
+          </div>
+          <div class="desc">${item.desc}</div>
+          <div class="detail-list">
+            <div>💧 湿度：${item.humidity}%</div>
+            <div>🌬️ 风速：${item.wind} km/h</div>
+          </div>
+          <div class="forecast">
+            ${item.forecast.map(day => `
+              <div class="forecast-item">
+                <div>${day.day}</div>
+                <div>${day.date}</div>
+                <div>${day.weather.icon}</div>
+                <div>${day.high}° / ${day.low}°</div>
+              </div>
+            `).join("")}
+          </div>
+        </div>
+      `;
+    }
+
+    weatherForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const cities = [city1Input.value.trim(), city2Input.value.trim()].filter(Boolean);
+      if (cities.length !== 2) {
+        renderError("请同时输入两个城市名称");
+        return;
+      }
+      renderWeather(cities);
+    });
+
+    renderWeather(["北京", "天津"]);
+  </script>
+</body>
+</html>
