@@ -414,15 +414,18 @@
       return `${date.getHours()}:${String(date.getMinutes()).padStart(2, "0")}`;
     }
 
-    function formatHourLabel(date) {
+    function formatHourLabel(date, referenceDate) {
+      const diffHours = Math.round((date.getTime() - referenceDate.getTime()) / (1000 * 60 * 60));
+      if (diffHours <= 0) return "现在";
+      if (diffHours === 1) return "1小时后";
+      if (diffHours < 24) return `${diffHours}小时后`;
+
       const hour = date.getHours();
-      if (hour === 0) return "凌晨 00:00";
-      if (hour < 6) return `凌晨 ${String(hour).padStart(2, "0")}:00`;
-      if (hour < 12) return `上午 ${String(hour).padStart(2, "0")}:00`;
-      if (hour === 12) return "中午 12:00";
-      if (hour < 18) return `下午 ${String(hour).padStart(2, "0")}:00`;
-      if (hour < 24) return `晚上 ${String(hour).padStart(2, "0")}:00`;
-      return "深夜 00:00";
+      const hourText = `${String(hour).padStart(2, "0")}:00`;
+      const dayDiff = Math.floor(diffHours / 24);
+      if (dayDiff === 1) return `明天 ${hourText}`;
+      if (dayDiff === 2) return `后天 ${hourText}`;
+      return `${date.getMonth() + 1}/${date.getDate()} ${hourText}`;
     }
 
     function getComfortLabel(temp, humidity) {
@@ -475,6 +478,7 @@
       const current = data.current;
       const hourly = data.hourly;
       const weather = getWeatherInfo(current.weather_code);
+      const now = new Date();
       const temps = hourly.temperature_2m.slice(0, 24);
       const maxTemp = Math.max(...temps);
       const minTemp = Math.min(...temps);
@@ -489,16 +493,16 @@
         humidity: current.relative_humidity_2m,
         wind: Math.round(current.wind_speed_10m),
         comfort: getComfortLabel(Math.round(current.temperature_2m), current.relative_humidity_2m),
-        updated: formatTime(new Date()),
+        updated: formatTime(now),
         forecast: hourly.time.slice(0, 4).map((time, index) => ({
-          day: index === 0 ? "当前" : `+${index}h`,
-          date: new Date(time).getHours() + "点",
+          day: formatHourLabel(new Date(time), now),
+          date: `${new Date(time).getMonth() + 1}/${new Date(time).getDate()} ${String(new Date(time).getHours()).padStart(2, "0")}:00`,
           high: Math.round(hourly.temperature_2m[index]),
           low: Math.round(hourly.temperature_2m[index]),
           weather: getWeatherInfo(hourly.weather_code[index])
         })),
         hourly: hourly.time.slice(0, 24).map((time, index) => ({
-          time: formatHourLabel(new Date(time)),
+          time: formatHourLabel(new Date(time), now),
           temp: Math.round(hourly.temperature_2m[index]),
           weather: getWeatherInfo(hourly.weather_code[index]),
           barHeight: Math.max(18, Math.round(((hourly.temperature_2m[index] - minTemp) / range) * 70 + 14))
